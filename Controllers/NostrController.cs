@@ -18,7 +18,7 @@ namespace NostrBridge.Controllers
         [HttpPost]
         public IActionResult Subscribe([FromBody] RequestKey request)
         {
-            var results = new List<Tuple<Event, string>>();
+            var events = new List<Tuple<Event, string>>();
 
             foreach (var relay in request.Relays)
             {
@@ -27,12 +27,17 @@ namespace NostrBridge.Controllers
 
                 using (var client = new WebsocketClient(url))
                 {
+                    var limit = 0;
                     client.ReconnectTimeout = TimeSpan.FromSeconds(30);
                     client.ReconnectionHappened.Subscribe(info =>
                         client.MessageReceived.Where(x => Deserialize(x.Text).Kind == 1).Subscribe(msg =>
                         {
-                            results.Add(new Tuple<Event, string>(Deserialize(msg.Text), msg.Text));
-                            exitEvent.Set();
+                            events.Add(new Tuple<Event, string>(Deserialize(msg.Text), msg.Text));
+                            limit += 1;
+                            if (limit >= request.Limit)
+                            {
+                                exitEvent.Set();
+                            }
                         })
                     );
                     client.Start();
@@ -48,11 +53,11 @@ namespace NostrBridge.Controllers
                     exitEvent.WaitOne(TimeSpan.FromSeconds(2));
                 }
             }
-            var result = results.OrderByDescending(t => t.Item1.CreatedAd).Select(t => t.Item1).First();
+            var result = events.OrderByDescending(t => t.Item1.CreatedAd).Select(t => t.Item1).GroupBy(p => p.Id).Select(g => g.First());
             return Ok(result);
         }
 
-        private Event Deserialize(string message)
+        private static Event Deserialize(string message)
         {
             var resultArray = JsonSerializer.Deserialize<object[]>(message);
             var resultStringFromRelay = resultArray[0].ToString();
