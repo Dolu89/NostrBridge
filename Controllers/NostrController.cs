@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using NostrBridge.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Websocket.Client;
@@ -40,7 +40,7 @@ namespace NostrBridge.Controllers
                     Task.Run(() =>
                     {
                         var obj = new { key = request.PubKey };
-                        string objJson = JsonConvert.SerializeObject(obj);
+                        string objJson = JsonSerializer.Serialize(obj);
                         client.Send($"req-key:{objJson}");
                     });
 
@@ -48,15 +48,15 @@ namespace NostrBridge.Controllers
                     exitEvent.WaitOne(TimeSpan.FromSeconds(2));
                 }
             }
-            var result = results.OrderByDescending(t => t.Item1.CreatedAd).Select(t => t.Item2).First();
-            return Ok(JsonConvert.SerializeObject(result));
+            var result = results.OrderByDescending(t => t.Item1.CreatedAd).Select(t => t.Item1).First();
+            return Ok(result);
         }
 
         private Event Deserialize(string message)
         {
-            var resultArray = JsonConvert.DeserializeObject<object[]>(message);
+            var resultArray = JsonSerializer.Deserialize<object[]>(message);
             var resultStringFromRelay = resultArray[0].ToString();
-            return JsonConvert.DeserializeObject<Event>(resultStringFromRelay);
+            return JsonSerializer.Deserialize<Event>(resultStringFromRelay);
         }
     }
 }
