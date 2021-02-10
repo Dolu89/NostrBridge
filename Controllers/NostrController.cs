@@ -30,7 +30,7 @@ namespace NostrBridge.Controllers
                     var limit = 0;
                     client.ReconnectTimeout = TimeSpan.FromSeconds(30);
                     client.ReconnectionHappened.Subscribe(info =>
-                        client.MessageReceived.Where(x => Deserialize(x.Text).Kind == 1).Subscribe(msg =>
+                        client.MessageReceived.Where(x => request.Kinds.Contains(Deserialize(x.Text).Kind)).Subscribe(msg =>
                         {
                             events.Add(new Tuple<Event, string>(Deserialize(msg.Text), msg.Text));
                             limit += 1;
@@ -53,7 +53,11 @@ namespace NostrBridge.Controllers
                     exitEvent.WaitOne(TimeSpan.FromSeconds(2));
                 }
             }
-            var result = events.OrderByDescending(t => t.Item1.CreatedAd).Select(t => t.Item1).GroupBy(p => p.Id).Select(g => g.First());
+            var result = events.OrderByDescending(t => t.Item1.CreatedAd)
+                               .Select(t => t.Item1)
+                               .GroupBy(p => p.Id)
+                               .Select(g => g.First())
+                               .Take(request.Limit);
             return Ok(result);
         }
 
