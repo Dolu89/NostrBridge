@@ -23,6 +23,6 @@ namespace NostrBridge.Models
         public int Kind { get; set; }
 
         [JsonPropertyName("created_at")]
-        public long CreatedAd { get; set; }
+        public long CreatedAt { get; set; }
     }
 }

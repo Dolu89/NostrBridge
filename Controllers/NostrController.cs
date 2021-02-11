@@ -53,7 +53,7 @@ namespace NostrBridge.Controllers
                     exitEvent.WaitOne(TimeSpan.FromSeconds(2));
                 }
             }
-            var result = events.OrderByDescending(t => t.Item1.CreatedAd)
+            var result = events.OrderByDescending(t => t.Item1.CreatedAt)
                                .Select(t => t.Item1)
                                .GroupBy(p => p.Id)
                                .Select(g => g.First())
