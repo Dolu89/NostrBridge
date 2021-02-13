@@ -42,12 +42,9 @@ namespace NostrBridge.Controllers
                     );
                     client.Start();
 
-                    Task.Run(() =>
-                    {
-                        var obj = new { key = request.PubKey };
-                        string objJson = JsonSerializer.Serialize(obj);
-                        client.Send($"req-key:{objJson}");
-                    });
+                    var obj = new { key = request.PubKey };
+                    string objJson = JsonSerializer.Serialize(obj);
+                    client.Send($"req-key:{objJson}");
 
                     // Wait 2 secs for messages. Exit after 2 secs in any case.
                     exitEvent.WaitOne(TimeSpan.FromSeconds(2));
